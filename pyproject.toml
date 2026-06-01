@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-satchel"
+version = "0.1.0"
+description = "Pack, run, and connect local AI models."
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.scripts]
+satchel = "local_satchel.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+local_satchel = ["model_catalog/models.json"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

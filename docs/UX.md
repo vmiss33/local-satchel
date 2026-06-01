@@ -5,7 +5,7 @@
 A normal user should only need to make three decisions:
 
 1. Do I want to check my PC?
-2. Do I want the recommended model?
+2. Do I want the model Local Satchel picked for this PC?
 3. Do I want to start it?
 
 Everything else should be automatic, explained in plain English, or hidden under **Advanced**.
@@ -93,13 +93,13 @@ Your PC is ready.
 NVIDIA GeForce RTX 4070
 12 GB VRAM
 
-Recommended: 7B/8B local models
+Recommended: best validated Nemotron model for this GPU
 ```
 
 Primary button:
 
 ```text
-Choose recommended model
+Choose my recommended model
 ```
 
 Secondary:
@@ -141,12 +141,16 @@ Choose a model
 Default card:
 
 ```text
-Best choice
+Best choice for this PC
 Fast local assistant
-Recommended for your GPU
+Picked for your NVIDIA GPU
 
 Good for chat, coding help, summaries, and everyday local AI tasks.
 ```
+
+Selection rule:
+
+Local Satchel should not always download the 8 GB-safe model. After Check detects the GPU and VRAM, Pack should download the best validated compatible model from the curated catalog. A user with a larger GPU should get a larger/better validated Nemotron model when one is available. If only the small model has been validated, say that plainly and offer larger models only as experimental/Advanced choices.
 
 Technical details collapsed:
 

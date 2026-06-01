@@ -11,14 +11,14 @@ Questions:
 - Which command-line flags produce reliable defaults on NVIDIA GPUs?
 - What happens when VRAM is insufficient?
 - What driver versions are needed in practice?
-- Which model families and quantizations work well for 8 GB, 12 GB, 16 GB, and 24 GB GPUs?
+- Which model families and quantizations work well for all cataloged NVIDIA VRAM tiers: 4 GB, 6 GB, 8 GB, 10 GB, 12 GB, 16 GB, 24 GB, 32 GB, and 48 GB+?
 - How should Local Satchel detect and recover from common startup failures?
 
 Deliverables:
 
 - `docs/research/windows-llamacpp-cuda-spike.md`
 - Manual runbook
-- Candidate model catalog
+- Candidate model catalog with explicit entries for every supported NVIDIA VRAM tier, including research-needed gaps
 - Working curl request against local endpoint
 - Notes on failure modes
 
@@ -46,9 +46,9 @@ Capabilities:
 
 - Detect NVIDIA GPU
 - Detect VRAM
-- Recommend model
+- Recommend the best validated model for the detected GPU/VRAM tier
 - Download runtime
-- Download model
+- Download the selected model, not a hardcoded default
 - Start local server
 - Verify endpoint
 - Print connection settings

@@ -58,8 +58,8 @@ If your PC has an NVIDIA GPU, Local Satchel can help you run a local AI model.
 1. User can install/open Local Satchel on Windows 11.
 2. User can click **Check my PC** and get a plain-English readiness result.
 3. Local Satchel detects GPU name, VRAM, driver availability, disk space, internet connectivity, and port availability.
-4. Local Satchel recommends a compatible model based on detected VRAM.
-5. User can accept the recommendation without understanding model quantization.
+4. Local Satchel recommends the best compatible curated model for the detected GPU/VRAM tier, not a single hardcoded default.
+5. User can accept the recommendation without understanding model size, quantization, runtime flags, or VRAM tiers.
 6. Local Satchel downloads the required llama.cpp CUDA runtime and GGUF model.
 7. Local Satchel starts a local OpenAI-compatible server.
 8. Local Satchel sends a test prompt and displays a response.
@@ -132,7 +132,20 @@ Raw command output must be hidden behind **Show technical details**.
 
 ### FR3: Model recommendation
 
-Local Satchel must recommend a model based on detected VRAM and a curated model catalog.
+Local Satchel must recommend a model based on detected VRAM and a curated model catalog. The recommendation engine must choose the highest-quality validated model that fits the current machine, rather than always choosing the smallest/8 GB-safe model.
+
+Initial Nemotron-first recommendation tiers must be explicit in the catalog for all common NVIDIA card-size tiers, not implied in code:
+
+- 4 GB VRAM: cataloged as below the current V1 validated floor unless a smaller Nemotron model is validated.
+- 6 GB VRAM: cataloged with the smallest validated Nemotron recommendation.
+- 8 GB VRAM: cataloged with the validated small Nemotron tier, currently NVIDIA Nemotron 3 Nano 4B Q4_K_M.
+- 10 GB VRAM: cataloged separately; use the best validated fit, not an implicit 8 GB assumption.
+- 12 GB VRAM: cataloged separately; should recommend a validated larger Nemotron tier once testing proves it fits reliably.
+- 16 GB VRAM: cataloged separately; should recommend a higher-quality validated Nemotron tier when available.
+- 24 GB VRAM: cataloged separately for high-end consumer/workstation GPUs.
+- 32 GB VRAM: cataloged separately for workstation-class GPUs.
+- 48 GB+ VRAM: cataloged separately for high-VRAM workstation/datacenter-class GPUs.
+- If a tier has no validated model yet, Local Satchel may temporarily fall back to the best lower validated tier, but the catalog must show the gap explicitly and the UX must not pretend the lower-tier model is the final optimized answer for that card size.
 
 The recommendation should include:
 
@@ -141,6 +154,7 @@ The recommendation should include:
 - Estimated download size
 - Estimated VRAM/RAM fit
 - Quality/speed expectation
+- Why this model was chosen for this GPU
 - Advanced technical details hidden by default
 
 ### FR4: Runtime preparation
