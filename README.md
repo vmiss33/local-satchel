@@ -2,132 +2,140 @@
 
 Pack, run, and connect local AI models.
 
-Local Satchel turns your NVIDIA GPU into a local AI endpoint. It checks your PC, recommends a compatible model, downloads the right local runtime, starts an OpenAI-compatible server, and gives you connection settings for apps and agents like Hermes.
+Carry your models. Run them anywhere.
 
-No manual CUDA setup. No model-server guesswork.
+Local Satchel turns your NVIDIA GPU into a local AI endpoint. It checks your PC, chooses a compatible model, downloads the runtime and model files, starts a private local server, and gives you connection settings for apps that support OpenAI-compatible APIs.
 
-## What Local Satchel is
+V1 is aimed at Windows 11 PCs with NVIDIA GPUs. The point is to hide the hard parts: CUDA builds, GGUF filenames, quantization, server flags, ports, and endpoint URLs.
 
-Local Satchel is a cross-platform local AI setup assistant. The first implementation target is Windows 11 with NVIDIA GPUs using llama.cpp CUDA builds and curated GGUF models.
+## The simple version
 
-The product is not Windows-only and not tied to one model host. Windows is the first beachhead because it is a high-friction environment for nontechnical local AI users.
-
-## V1 promise
-
-A normal user should be able to:
-
-1. Open Local Satchel.
-2. Click **Check my PC**.
-3. Accept the recommended model.
-4. Click **Pack**.
-5. Click **Run**.
-6. Test a local chat response.
-7. Copy connection settings into Hermes or another OpenAI-compatible app.
-
-## V1 scope
-
-- Windows 11 initial target
-- NVIDIA GPU required
-- llama.cpp CUDA runtime
-- Curated GGUF model catalog
-- OpenAI-compatible local endpoint
-- Built-in test chat
-- Copy-paste Hermes/OpenAI-compatible connection settings
-
-## Repository layout
+Local Satchel should feel like this:
 
 ```text
-local-satchel/
-  src/
-    local_satchel/
-      assets.py
-      catalog.py
-      cli.py
-      doctor.py
-      recommend.py
-      model_catalog/
-        models.json
-
-  docs/
-    PRD.md
-    UX.md
-    ROADMAP.md
-    ARCHITECTURE.md
-    research/
-      windows-llamacpp-cuda-spike.md
-  examples/
-    hermes/
-      provider-config.md
-  model-catalog/
-    models.json
+Check  ->  Pack  ->  Run  ->  Test  ->  Connect  ->  Stop
 ```
 
-## How this is meant to work
+What those words mean:
 
-Local Satchel is the bridge between Hermes Agent and your NVIDIA GPU.
+- **Check**: Look at your PC and decide whether local AI can run well here.
+- **Pack**: Download the recommended local runtime and model for this machine.
+- **Run**: Start the model server privately on this PC.
+- **Test**: Send a real chat request and confirm the local endpoint works.
+- **Connect**: Show the settings another app needs to use the local model.
+- **Stop**: Turn the local model server off.
 
-The intended first-run flow is:
+The user should not need to know what `llama.cpp`, CUDA, GGUF, quantization, or an inference server is.
 
-1. Install Hermes Agent, but do not configure a cloud model yet.
-2. Install Local Satchel.
-3. Run Local Satchel's local model server on `127.0.0.1`.
-4. Point Hermes Agent at the Local Satchel OpenAI-compatible endpoint.
-5. Use Hermes Agent normally, backed by the model running on your own PC.
+## Current status
 
-In other words: Hermes Agent is the assistant interface. Local Satchel is the local model pack, runner, and connection helper.
+Local Satchel is currently a working CLI prototype, not a finished consumer app.
 
-## Step 1: Install Hermes Agent first
+Already working in the prototype:
 
-Install Hermes Agent before Local Satchel so there is already an assistant app ready to connect.
+- Windows NVIDIA hardware check
+- VRAM-aware model recommendation
+- curated model catalog
+- llama.cpp CUDA runtime preparation
+- model download/preparation
+- local server start/stop
+- OpenAI-compatible test request
+- Hermes/OpenAI-compatible connection output
 
-Follow the Hermes Agent install instructions:
+The current validated path is Windows 11 + NVIDIA GeForce RTX 4070 Laptop GPU + NVIDIA Nemotron 3 Nano 4B Q4_K_M through llama.cpp CUDA.
 
-```text
-https://hermes-agent.nousresearch.com/docs
-```
+## Install on Windows
 
-Stop after installing Hermes Agent. Do not run the model/provider setup wizard yet, and do not configure a cloud provider unless you want one separately.
-
-## Step 2: Install Local Satchel on Windows
-
-Open PowerShell and paste this one command:
+Open PowerShell and run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/vmiss33/local-satchel/main/scripts/install-local-satchel.ps1 | iex"
 ```
 
-The installer:
+The installer creates Local Satchel under:
 
-- installs Python for you with Windows Package Manager if Python is missing
-- creates Local Satchel's app environment under `C:\Users\<you>\AppData\Local\LocalSatchel`
-- installs the `satchel` command
-- checks your PC when installation finishes
+```text
+C:\Users\<you>\AppData\Local\LocalSatchel
+```
 
-After Local Satchel is installed, open a new terminal and run:
+It also creates a `satchel` command.
+
+After install, open a new PowerShell window. If `satchel` is not found yet, close and reopen PowerShell once more.
+
+## First run
+
+Run these commands in PowerShell:
 
 ```powershell
 satchel check
 satchel pack recommended
 satchel run
 satchel test
-```
-
-What those commands do:
-
-- `satchel check` checks your NVIDIA GPU, VRAM, driver, and free disk space.
-- `satchel pack recommended` downloads/prepares the recommended local runtime and model.
-- `satchel run` starts the local OpenAI-compatible server on `127.0.0.1:8080`.
-- `satchel test` sends a real chat request to make sure the endpoint works.
-
-## Step 3: Connect Hermes Agent to Local Satchel
-
-With Local Satchel still running, print the Hermes connection settings:
-
-```powershell
 satchel connect hermes
 ```
 
-Local Satchel currently provides these OpenAI-compatible settings:
+Expected flow:
+
+1. `satchel check` reports whether your PC is ready and which model tier it recommends.
+2. `satchel pack recommended` downloads/prepares the runtime and model files.
+3. `satchel run` starts the local server at `http://127.0.0.1:8080/v1`.
+4. `satchel test` sends a chat request to the local server.
+5. `satchel connect hermes` prints the settings to paste into Hermes or another OpenAI-compatible app.
+
+When finished:
+
+```powershell
+satchel stop
+```
+
+## How this is meant to work
+
+Local Satchel is a local AI launcher and connection helper.
+
+It does four jobs:
+
+1. **Inspect the computer**
+   - Finds the NVIDIA GPU.
+   - Reads VRAM and driver information.
+   - Checks available disk space.
+
+2. **Choose a safe default**
+   - Uses a curated model catalog.
+   - Picks the best validated model for the detected VRAM tier.
+   - Avoids asking normal users to choose quantization levels or model files.
+
+3. **Prepare the local AI bundle**
+   - Downloads a Windows CUDA build of llama.cpp.
+   - Downloads the selected GGUF model.
+   - Stores app-managed files under `C:\Users\<you>\AppData\Local\LocalSatchel`.
+
+4. **Run and connect**
+   - Starts `llama-server.exe` bound to `127.0.0.1` only.
+   - Exposes an OpenAI-compatible endpoint at `http://127.0.0.1:8080/v1`.
+   - Prints connection settings for Hermes and other compatible clients.
+
+The important product idea: users should operate Local Satchel with product verbs, not infrastructure vocabulary.
+
+They should say:
+
+```text
+Check my PC.
+Pack the model.
+Run it.
+Test it.
+Connect my app.
+Stop it.
+```
+
+They should not have to say:
+
+```text
+Download a CUDA artifact, pick a GGUF quant, choose llama-server flags, bind a host, pick a port, and configure an OpenAI-compatible base URL.
+```
+
+## Connect another app
+
+While Local Satchel is running, the local endpoint is:
 
 ```text
 Base URL: http://127.0.0.1:8080/v1
@@ -135,45 +143,60 @@ API key: local-satchel
 Model: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
 ```
 
-Use those values when Hermes asks for a provider/model. Choose the OpenAI-compatible/custom endpoint option, then enter the Local Satchel base URL, API key, and model name.
+The API key is only a placeholder for clients that require one. The V1 prototype binds to `127.0.0.1`, so the server is private to this PC.
 
-After Hermes is configured, use it normally:
-
-```powershell
-hermes
-```
-
-Keep Local Satchel running while Hermes is using the local model. When you are done, stop the local model server:
+For Hermes:
 
 ```powershell
-satchel stop
+satchel connect hermes
 ```
 
-## Developer/debug commands
+Then use the printed values in Hermes as an OpenAI-compatible/custom provider.
 
-These are useful while building or troubleshooting Local Satchel:
+## Developer commands
+
+From a cloned repo:
+
+```powershell
+git clone https://github.com/vmiss33/local-satchel.git C:\Users\<you>\repos\local-satchel
+cd C:\Users\<you>\repos\local-satchel
+powershell -ExecutionPolicy Bypass -File .\scripts\install-local-satchel.ps1
+```
+
+Useful debug commands:
 
 ```powershell
 satchel check --json
 satchel models --json
-satchel recommend --vram-gb 12 --json
+satchel recommend --vram-gb 8 --json
 satchel status --json
 ```
 
-If you are testing from a cloned repo before a public release, run:
+Run tests from the repo:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-local-satchel.ps1
+$env:PYTHONPATH = "src"
+python -m pytest tests -q
 ```
 
-The CLI currently stores app-managed assets under:
+## Repository layout
 
 ```text
-C:\Users\<you>\AppData\Local\LocalSatchel
+local-satchel/
+  src/local_satchel/          CLI and runtime code
+  tests/                      CLI and packaging tests
+  scripts/                    Windows installer and helper scripts
+  docs/                       PRD, UX, roadmap, architecture, research
+  examples/hermes/            Hermes provider notes
+  model-catalog/models.json   source model catalog
 ```
 
-It binds llama.cpp to `127.0.0.1:8080` only.
+## Design constraints for V1
 
-## Current status
-
-Phase 0 validated the Windows NVIDIA llama.cpp CUDA path with NVIDIA Nemotron 3 Nano 4B Q4_K_M. Phase 1 CLI core is in progress: Check, model-tier recommendation, Pack, Run, Test, Connect, and Stop now exist as an installable Python CLI prototype backed by tests.
+- Windows 11 is the first implementation target.
+- NVIDIA GPU required for the first path.
+- Use a direct Windows install path for V1 instead of requiring container tooling.
+- Do not require manual CUDA installation unless research proves it unavoidable.
+- Use llama.cpp CUDA builds, GGUF models, and OpenAI-compatible localhost endpoints.
+- Bind to `127.0.0.1` by default; do not expose the server to the LAN by accident.
+- Prefer safe defaults over asking users technical questions.
