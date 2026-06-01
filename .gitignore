@@ -1,0 +1,23 @@
+# Local Satchel generated/downloaded assets
+.cache/
+models/
+runtimes/
+logs/
+*.gguf
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python/prototype
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node/prototype
+node_modules/
+dist/
+build/

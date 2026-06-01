@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "notes": "Seed schema only. Final model entries must be validated during the Windows llama.cpp CUDA research spike.",
+  "models": [
+    {
+      "id": "placeholder-small",
+      "display_name": "Small local assistant placeholder",
+      "family": "TBD",
+      "source_url": "TBD",
+      "license": "TBD",
+      "filename": "TBD.gguf",
+      "quantization": "TBD",
+      "download_size_gb": null,
+      "min_vram_gb": 6,
+      "recommended_vram_gb": 8,
+      "context_size_default": 4096,
+      "status": "research-needed",
+      "notes": "Replace after validating specific GGUF models, licenses, and performance on Windows NVIDIA GPUs."
+    }
+  ]
+}
