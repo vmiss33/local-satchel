@@ -46,10 +46,13 @@ The current validated path is Windows 11 + NVIDIA GeForce RTX 4070 Laptop GPU + 
 
 ## Install on Windows
 
+Use PowerShell for the install and first run commands.
+
 Open PowerShell and run:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/vmiss33/local-satchel/main/scripts/install-local-satchel.ps1 | iex"
+Set-ExecutionPolicy -Scope Process Bypass -Force
+irm https://raw.githubusercontent.com/vmiss33/local-satchel/main/scripts/install-local-satchel.ps1 | iex
 ```
 
 The installer creates Local Satchel under:
@@ -60,11 +63,11 @@ C:\Users\<you>\AppData\Local\LocalSatchel
 
 It also creates a `satchel` command.
 
-After install, open a new PowerShell window. If `satchel` is not found yet, close and reopen PowerShell once more.
+After install, close PowerShell and open a new PowerShell window or tab. This lets Windows pick up the new `satchel` command.
 
 ## First run
 
-Run these commands in PowerShell:
+In that new PowerShell window, run:
 
 ```powershell
 satchel check
