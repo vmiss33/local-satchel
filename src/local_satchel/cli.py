@@ -59,6 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     connect_sub = connect.add_subparsers(dest="target", required=True)
     hermes = connect_sub.add_parser("hermes", help="Configure Hermes Agent to use Local Satchel")
     hermes.add_argument("--show", action="store_true", help="Print settings without changing Hermes config")
+    hermes.add_argument(
+        "--profile",
+        default="default",
+        help="Hermes profile to configure. Use 'default' or 'base' for the base Hermes config.",
+    )
     hermes.set_defaults(func=cmd_connect_hermes)
 
     status = sub.add_parser("status", help="Show local endpoint status")
@@ -142,19 +147,22 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_connect_hermes(args: argparse.Namespace) -> int:
     model_name = hermes_model_name(args.catalog)
+    profile = normalize_hermes_profile(args.profile)
     if args.show:
         print_hermes_settings(model_name)
         return 0
     try:
-        configure_hermes(model_name)
+        configure_hermes(model_name, profile=profile)
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         return 2
     print("Hermes configured to use Local Satchel.")
+    print(f"Hermes profile: {profile}")
     print(f"Provider: {HERMES_PROVIDER_NAME}")
     print(f"Base URL: {LOCAL_SATCHEL_BASE_URL}")
     print(f"Model: {model_name}")
-    print("Start a new Hermes session for the config change to take effect.")
+    print("Start a new Hermes session for the config change to take effect:")
+    print(f"  {hermes_launch_command(profile)}")
     print("Keep Local Satchel running while Hermes uses this local model.")
     return 0
 
@@ -173,7 +181,29 @@ def print_hermes_settings(model_name: str) -> None:
     print("Keep the server bound to 127.0.0.1 unless you explicitly enable LAN access later.")
 
 
-def configure_hermes(model_name: str, hermes_command: str = "hermes") -> None:
+def normalize_hermes_profile(profile: str | None) -> str:
+    value = (profile or "default").strip()
+    if not value or value.lower() in {"base", "default"}:
+        return "default"
+    return value
+
+
+def hermes_config_command(hermes_command: str, profile: str) -> list[str]:
+    command = [hermes_command]
+    if profile != "default":
+        command.extend(["--profile", profile])
+    command.extend(["config", "set"])
+    return command
+
+
+def hermes_launch_command(profile: str) -> str:
+    if profile == "default":
+        return "hermes"
+    return f"hermes --profile {profile}"
+
+
+def configure_hermes(model_name: str, hermes_command: str = "hermes", profile: str = "default") -> None:
+    profile = normalize_hermes_profile(profile)
     if shutil.which(hermes_command) is None:
         raise RuntimeError(
             "Hermes Agent was not found on PATH. Install Hermes first, or run "
@@ -190,7 +220,7 @@ def configure_hermes(model_name: str, hermes_command: str = "hermes") -> None:
         ("model.default", model_name),
     ]
     for key, value in settings:
-        command = [hermes_command, "config", "set", key, value]
+        command = [*hermes_config_command(hermes_command, profile), key, value]
         result = subprocess.run(command, text=True, capture_output=True, check=False)
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "unknown error").strip()

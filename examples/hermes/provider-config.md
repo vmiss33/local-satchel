@@ -6,7 +6,16 @@ Local Satchel configures Hermes Agent through:
 satchel connect hermes
 ```
 
-That command writes a named `Local Satchel` provider into the Hermes config and sets it as the active model provider.
+That command writes a named `Local Satchel` provider into the base Hermes config and sets it as the active model provider.
+
+To configure an additional Hermes profile instead, create that profile in Hermes first, then point Local Satchel at it:
+
+```powershell
+hermes profile create ambrosia
+satchel connect hermes --profile ambrosia
+```
+
+Local Satchel does not create Hermes profiles for you. Use `--profile default` or `--profile base` when you want to be explicit about configuring the base Hermes profile.
 
 ## Settings
 
@@ -28,6 +37,28 @@ satchel connect hermes --show
 
 Use this for other OpenAI-compatible clients or for manual troubleshooting.
 
+## Hermes profile behavior
+
+Local Satchel configures the base Hermes profile by default:
+
+```powershell
+satchel connect hermes
+```
+
+For a named Hermes profile, Local Satchel runs Hermes config commands with Hermes' profile flag:
+
+```powershell
+hermes --profile ambrosia config set providers.local-satchel.base_url http://127.0.0.1:8080/v1
+```
+
+Use:
+
+```powershell
+satchel connect hermes --profile ambrosia
+```
+
+`--profile base` and `--profile default` both mean the base Hermes config.
+
 ## Hermes config shape
 
 The command creates/updates this provider shape through `hermes config set`:
@@ -45,4 +76,8 @@ model:
   default: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
 ```
 
-Start a new Hermes session after connecting so Hermes reloads its config.
+Start a new Hermes session after connecting so Hermes reloads its config. For a named profile, start that same profile:
+
+```powershell
+hermes --profile ambrosia
+```

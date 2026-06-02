@@ -187,6 +187,7 @@ Local Satchel must configure Hermes Agent automatically and display copyable set
 - Model name
 - Example curl request
 - Hermes config update summary
+- Hermes base/default profile selection or named profile selection
 
 ### FR9: Start/stop/status
 

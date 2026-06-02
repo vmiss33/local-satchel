@@ -76,6 +76,61 @@ def test_connect_hermes_configures_hermes_with_named_local_satchel_provider(monk
     assert "Start a new Hermes session" in out
 
 
+def test_connect_hermes_configures_named_hermes_profile(monkeypatch, capsys):
+    calls = []
+
+    monkeypatch.setattr(cli.shutil, "which", lambda command: "hermes")
+
+    def fake_run(command, text, capture_output, check):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    result = cli.main(["connect", "hermes", "--profile", "ambrosia"])
+
+    assert result == 0
+    assert calls[0] == [
+        "hermes",
+        "--profile",
+        "ambrosia",
+        "config",
+        "set",
+        "providers.local-satchel.name",
+        "Local Satchel",
+    ]
+    assert calls[-1] == [
+        "hermes",
+        "--profile",
+        "ambrosia",
+        "config",
+        "set",
+        "model.default",
+        "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
+    ]
+    out = capsys.readouterr().out
+    assert "Hermes profile: ambrosia" in out
+    assert "hermes --profile ambrosia" in out
+
+
+def test_connect_hermes_profile_base_alias_configures_default_profile(monkeypatch, capsys):
+    calls = []
+
+    monkeypatch.setattr(cli.shutil, "which", lambda command: "hermes")
+    monkeypatch.setattr(
+        cli.subprocess,
+        "run",
+        lambda command, text, capture_output, check: calls.append(command)
+        or subprocess.CompletedProcess(command, 0, stdout="ok", stderr=""),
+    )
+
+    result = cli.main(["connect", "hermes", "--profile", "base"])
+
+    assert result == 0
+    assert all("--profile" not in command for command in calls)
+    assert "Hermes profile: default" in capsys.readouterr().out
+
+
 def test_connect_hermes_reports_missing_hermes_without_touching_config(monkeypatch, capsys):
     monkeypatch.setattr(cli.shutil, "which", lambda command: None)
 

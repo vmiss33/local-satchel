@@ -148,7 +148,24 @@ With Local Satchel running, configure Hermes Agent to use the local model:
 satchel connect hermes
 ```
 
-That command writes a named `Local Satchel` provider into the Hermes config and sets it as the active model provider.
+That command writes a named `Local Satchel` provider into the base Hermes config and sets it as the active model provider.
+
+If you want to be explicit about configuring the base Hermes profile, use:
+
+```powershell
+satchel connect hermes --profile base
+```
+
+You can also use `--profile default`; both names mean the base Hermes profile.
+
+To configure an additional Hermes profile, create that profile in Hermes first, then point Local Satchel at it:
+
+```powershell
+hermes profile create ambrosia
+satchel connect hermes --profile ambrosia
+```
+
+Local Satchel does not create Hermes profiles for you. The profile must already exist so Hermes knows where to write that profile's config.
 
 It sets:
 
@@ -165,6 +182,12 @@ Start a new Hermes session after connecting so Hermes loads the updated config:
 
 ```powershell
 hermes
+```
+
+For a named profile, start that profile:
+
+```powershell
+hermes --profile ambrosia
 ```
 
 ## Connect another OpenAI-compatible app
@@ -194,6 +217,7 @@ satchel check --json
 satchel models --json
 satchel recommend --vram-gb 8 --json
 satchel status --json
+satchel connect hermes --profile ambrosia
 satchel connect hermes --show
 ```
 
