@@ -87,13 +87,13 @@ def test_connect_hermes_configures_named_hermes_profile(monkeypatch, capsys):
 
     monkeypatch.setattr(cli.subprocess, "run", fake_run)
 
-    result = cli.main(["connect", "hermes", "--profile", "ambrosia"])
+    result = cli.main(["connect", "hermes", "--profile", "myprofile"])
 
     assert result == 0
     assert calls[0] == [
         "hermes",
         "--profile",
-        "ambrosia",
+        "myprofile",
         "config",
         "set",
         "providers.local-satchel.name",
@@ -102,15 +102,15 @@ def test_connect_hermes_configures_named_hermes_profile(monkeypatch, capsys):
     assert calls[-1] == [
         "hermes",
         "--profile",
-        "ambrosia",
+        "myprofile",
         "config",
         "set",
         "model.default",
         "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
     ]
     out = capsys.readouterr().out
-    assert "Hermes profile: ambrosia" in out
-    assert "hermes --profile ambrosia" in out
+    assert "Hermes profile: myprofile" in out
+    assert "hermes --profile myprofile" in out
 
 
 def test_connect_hermes_profile_base_alias_configures_default_profile(monkeypatch, capsys):

@@ -164,8 +164,8 @@ You can also use `--profile default`; both names mean the base Hermes profile.
 To configure an additional Hermes profile, create that profile in Hermes first, then point Local Satchel at it:
 
 ```powershell
-hermes profile create ambrosia
-satchel connect hermes --profile ambrosia
+hermes profile create myprofile
+satchel connect hermes --profile myprofile
 ```
 
 Local Satchel does not create Hermes profiles for you. The profile must already exist so Hermes knows where to write that profile's config.
@@ -190,7 +190,7 @@ hermes
 For a named profile, start that profile:
 
 ```powershell
-hermes --profile ambrosia
+hermes --profile myprofile
 ```
 
 ## Connect another OpenAI-compatible app
@@ -220,7 +220,7 @@ satchel check --json
 satchel models --json
 satchel recommend --vram-gb 8 --json
 satchel status --json
-satchel connect hermes --profile ambrosia
+satchel connect hermes --profile myprofile
 satchel connect hermes --show
 ```
 

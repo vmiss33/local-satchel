@@ -11,8 +11,8 @@ That command writes a named `Local Satchel` provider into the base Hermes config
 To configure an additional Hermes profile instead, create that profile in Hermes first, then point Local Satchel at it:
 
 ```powershell
-hermes profile create ambrosia
-satchel connect hermes --profile ambrosia
+hermes profile create myprofile
+satchel connect hermes --profile myprofile
 ```
 
 Local Satchel does not create Hermes profiles for you. Use `--profile default` or `--profile base` when you want to be explicit about configuring the base Hermes profile.
@@ -48,13 +48,13 @@ satchel connect hermes
 For a named Hermes profile, Local Satchel runs Hermes config commands with Hermes' profile flag:
 
 ```powershell
-hermes --profile ambrosia config set providers.local-satchel.base_url http://127.0.0.1:8080/v1
+hermes --profile myprofile config set providers.local-satchel.base_url http://127.0.0.1:8080/v1
 ```
 
 Use:
 
 ```powershell
-satchel connect hermes --profile ambrosia
+satchel connect hermes --profile myprofile
 ```
 
 `--profile base` and `--profile default` both mean the base Hermes config.
@@ -79,5 +79,5 @@ model:
 Start a new Hermes session after connecting so Hermes reloads its config. For a named profile, start that same profile:
 
 ```powershell
-hermes --profile ambrosia
+hermes --profile myprofile
 ```
