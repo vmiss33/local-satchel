@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -14,6 +16,11 @@ from .doctor import disk_free_gb, query_nvidia_gpu, summarize_readiness
 from .recommend import recommend_for_vram
 
 DEFAULT_TEST_PROMPT = "Reply with exactly: satchel works"
+LOCAL_SATCHEL_BASE_URL = "http://127.0.0.1:8080/v1"
+LOCAL_SATCHEL_API_KEY = "local-satchel"
+HERMES_PROVIDER_KEY = "local-satchel"
+HERMES_PROVIDER_NAME = "Local Satchel"
+HERMES_API_MODE = "chat_completions"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -48,9 +55,10 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--json", action="store_true", help="Output JSON")
     check.set_defaults(func=cmd_doctor)
 
-    connect = sub.add_parser("connect", help="Print connection settings")
+    connect = sub.add_parser("connect", help="Configure another app to use Local Satchel")
     connect_sub = connect.add_subparsers(dest="target", required=True)
-    hermes = connect_sub.add_parser("hermes", help="Print Hermes/OpenAI-compatible settings")
+    hermes = connect_sub.add_parser("hermes", help="Configure Hermes Agent to use Local Satchel")
+    hermes.add_argument("--show", action="store_true", help="Print settings without changing Hermes config")
     hermes.set_defaults(func=cmd_connect_hermes)
 
     status = sub.add_parser("status", help="Show local endpoint status")
@@ -133,15 +141,60 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def cmd_connect_hermes(args: argparse.Namespace) -> int:
-    catalog = load_catalog(args.catalog)
+    model_name = hermes_model_name(args.catalog)
+    if args.show:
+        print_hermes_settings(model_name)
+        return 0
+    try:
+        configure_hermes(model_name)
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    print("Hermes configured to use Local Satchel.")
+    print(f"Provider: {HERMES_PROVIDER_NAME}")
+    print(f"Base URL: {LOCAL_SATCHEL_BASE_URL}")
+    print(f"Model: {model_name}")
+    print("Start a new Hermes session for the config change to take effect.")
+    print("Keep Local Satchel running while Hermes uses this local model.")
+    return 0
+
+
+def hermes_model_name(catalog_path: str) -> str:
+    catalog = load_catalog(catalog_path)
     recommendation = recommend_for_vram(catalog, 8)
-    model_name = recommendation.model["filename"] if recommendation.model else "local-satchel"
+    return recommendation.model["filename"] if recommendation.model else "local-satchel"
+
+
+def print_hermes_settings(model_name: str) -> None:
     print("Local Satchel Hermes/OpenAI-compatible settings")
-    print("Base URL: http://127.0.0.1:8080/v1")
-    print("API key: local-satchel")
+    print(f"Base URL: {LOCAL_SATCHEL_BASE_URL}")
+    print(f"API key: {LOCAL_SATCHEL_API_KEY}")
     print(f"Model: {model_name}")
     print("Keep the server bound to 127.0.0.1 unless you explicitly enable LAN access later.")
-    return 0
+
+
+def configure_hermes(model_name: str, hermes_command: str = "hermes") -> None:
+    if shutil.which(hermes_command) is None:
+        raise RuntimeError(
+            "Hermes Agent was not found on PATH. Install Hermes first, or run "
+            "`satchel connect hermes --show` and paste the settings manually."
+        )
+
+    settings = [
+        (f"providers.{HERMES_PROVIDER_KEY}.name", HERMES_PROVIDER_NAME),
+        (f"providers.{HERMES_PROVIDER_KEY}.base_url", LOCAL_SATCHEL_BASE_URL),
+        (f"providers.{HERMES_PROVIDER_KEY}.api_key", LOCAL_SATCHEL_API_KEY),
+        (f"providers.{HERMES_PROVIDER_KEY}.default_model", model_name),
+        (f"providers.{HERMES_PROVIDER_KEY}.api_mode", HERMES_API_MODE),
+        ("model.provider", HERMES_PROVIDER_KEY),
+        ("model.default", model_name),
+    ]
+    for key, value in settings:
+        command = [hermes_command, "config", "set", key, value]
+        result = subprocess.run(command, text=True, capture_output=True, check=False)
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "unknown error").strip()
+            raise RuntimeError(f"Hermes config update failed for {key}: {detail}")
 
 
 def cmd_status(args: argparse.Namespace) -> int:

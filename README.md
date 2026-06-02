@@ -4,7 +4,7 @@ Pack, run, and connect local AI models.
 
 Carry your models. Run them anywhere.
 
-Local Satchel turns your NVIDIA GPU into a local AI endpoint. It checks your PC, chooses a compatible model, downloads the runtime and model files, starts a private local server, and gives you connection settings for apps that support OpenAI-compatible APIs.
+Local Satchel turns your NVIDIA GPU into a local AI endpoint. It checks your PC, chooses a compatible model, downloads the runtime and model files, starts a private local server, and configures apps that support OpenAI-compatible APIs.
 
 V1 is aimed at Windows 11 PCs with NVIDIA GPUs. The point is to hide the hard parts: CUDA builds, GGUF filenames, quantization, server flags, ports, and endpoint URLs.
 
@@ -22,7 +22,7 @@ What those words mean:
 - **Pack**: Download the recommended local runtime and model for this machine.
 - **Run**: Start the model server privately on this PC.
 - **Test**: Send a real chat request and confirm the local endpoint works.
-- **Connect**: Show the settings another app needs to use the local model.
+- **Connect**: Configure another app to use the local model.
 - **Stop**: Turn the local model server off.
 
 The user should not need to know what `llama.cpp`, CUDA, GGUF, quantization, or an inference server is.
@@ -40,7 +40,7 @@ Already working in the prototype:
 - model download/preparation
 - local server start/stop
 - OpenAI-compatible test request
-- Hermes/OpenAI-compatible connection output
+- Hermes Agent configuration
 
 The current validated path is Windows 11 + NVIDIA GeForce RTX 4070 Laptop GPU + NVIDIA Nemotron 3 Nano 4B Q4_K_M through llama.cpp CUDA.
 
@@ -80,7 +80,13 @@ Expected flow:
 2. `satchel pack recommended` downloads/prepares the runtime and model files.
 3. `satchel run` starts the local server at `http://127.0.0.1:8080/v1`.
 4. `satchel test` sends a chat request to the local server.
-5. `satchel connect hermes` prints the settings to paste into Hermes or another OpenAI-compatible app.
+5. `satchel connect hermes` configures Hermes Agent to use the Local Satchel endpoint.
+
+Then start a new Hermes session:
+
+```powershell
+hermes
+```
 
 When finished:
 
@@ -112,7 +118,8 @@ It does four jobs:
 4. **Run and connect**
    - Starts `llama-server.exe` bound to `127.0.0.1` only.
    - Exposes an OpenAI-compatible endpoint at `http://127.0.0.1:8080/v1`.
-   - Prints connection settings for Hermes and other compatible clients.
+   - Configures Hermes Agent with a named `Local Satchel` provider.
+   - Prints raw endpoint settings for other compatible clients.
 
 The important product idea: users should operate Local Satchel with product verbs, not infrastructure vocabulary.
 
@@ -133,11 +140,20 @@ They should not have to say:
 Download a CUDA artifact, pick a GGUF quant, choose llama-server flags, bind a host, pick a port, and configure an OpenAI-compatible base URL.
 ```
 
-## Connect another app
+## Connect Hermes Agent
 
-While Local Satchel is running, the local endpoint is:
+With Local Satchel running, configure Hermes Agent to use the local model:
+
+```powershell
+satchel connect hermes
+```
+
+That command writes a named `Local Satchel` provider into the Hermes config and sets it as the active model provider.
+
+It sets:
 
 ```text
+Provider: Local Satchel
 Base URL: http://127.0.0.1:8080/v1
 API key: local-satchel
 Model: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
@@ -145,13 +161,21 @@ Model: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
 
 The API key is only a placeholder for clients that require one. The V1 prototype binds to `127.0.0.1`, so the server is private to this PC.
 
-For Hermes:
+Start a new Hermes session after connecting so Hermes loads the updated config:
 
 ```powershell
-satchel connect hermes
+hermes
 ```
 
-Then use the printed values in Hermes as an OpenAI-compatible/custom provider.
+## Connect another OpenAI-compatible app
+
+For apps other than Hermes, print the raw settings:
+
+```powershell
+satchel connect hermes --show
+```
+
+Copy the printed Base URL, API key, and Model into the app's OpenAI-compatible/custom endpoint settings.
 
 ## Developer commands
 
@@ -170,6 +194,7 @@ satchel check --json
 satchel models --json
 satchel recommend --vram-gb 8 --json
 satchel status --json
+satchel connect hermes --show
 ```
 
 Run tests from the repo:

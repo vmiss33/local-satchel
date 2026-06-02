@@ -180,13 +180,13 @@ Local Satchel must wait for the server to become ready and then send a test prom
 
 ### FR8: Connection settings
 
-Local Satchel must display copyable settings:
+Local Satchel must configure Hermes Agent automatically and display copyable settings for other OpenAI-compatible clients:
 
 - Base URL
 - API key placeholder if a client requires one
 - Model name
 - Example curl request
-- Hermes/OpenAI-compatible instructions
+- Hermes config update summary
 
 ### FR9: Start/stop/status
 

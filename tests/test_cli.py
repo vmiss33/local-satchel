@@ -37,12 +37,53 @@ def test_recommend_command_for_12gb_reports_explicit_tier_and_fallback():
     assert data["candidate_model_ids"] == ["llama-3-1-nemotron-nano-8b-q4-k-m"]
 
 
-def test_connect_hermes_prints_localhost_openai_settings():
-    result = run_cli("connect", "hermes")
+def test_connect_hermes_show_prints_localhost_openai_settings():
+    result = run_cli("connect", "hermes", "--show")
 
     assert result.returncode == 0, result.stderr
     assert "http://127.0.0.1:8080/v1" in result.stdout
     assert "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf" in result.stdout
+
+
+def test_connect_hermes_configures_hermes_with_named_local_satchel_provider(monkeypatch, capsys):
+    calls = []
+
+    def fake_which(command):
+        assert command == "hermes"
+        return "C:/Users/melis/AppData/Local/hermes/bin/hermes.exe"
+
+    def fake_run(command, text, capture_output, check):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(cli.shutil, "which", fake_which)
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    result = cli.main(["connect", "hermes"])
+
+    assert result == 0
+    assert calls == [
+        ["hermes", "config", "set", "providers.local-satchel.name", "Local Satchel"],
+        ["hermes", "config", "set", "providers.local-satchel.base_url", "http://127.0.0.1:8080/v1"],
+        ["hermes", "config", "set", "providers.local-satchel.api_key", "local-satchel"],
+        ["hermes", "config", "set", "providers.local-satchel.default_model", "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf"],
+        ["hermes", "config", "set", "providers.local-satchel.api_mode", "chat_completions"],
+        ["hermes", "config", "set", "model.provider", "local-satchel"],
+        ["hermes", "config", "set", "model.default", "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf"],
+    ]
+    out = capsys.readouterr().out
+    assert "Hermes configured to use Local Satchel." in out
+    assert "Start a new Hermes session" in out
+
+
+def test_connect_hermes_reports_missing_hermes_without_touching_config(monkeypatch, capsys):
+    monkeypatch.setattr(cli.shutil, "which", lambda command: None)
+
+    result = cli.main(["connect", "hermes"])
+
+    assert result == 2
+    err = capsys.readouterr().err
+    assert "Hermes Agent was not found" in err
 
 
 def test_default_catalog_path_is_package_data_for_installed_satchel_command():

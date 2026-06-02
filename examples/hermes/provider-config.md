@@ -1,34 +1,48 @@
 # Hermes Provider Configuration Example
 
-Local Satchel v1 should first provide copy-paste settings for any OpenAI-compatible client.
+Local Satchel configures Hermes Agent through:
 
-## Generic OpenAI-compatible settings
+```powershell
+satchel connect hermes
+```
+
+That command writes a named `Local Satchel` provider into the Hermes config and sets it as the active model provider.
+
+## Settings
 
 ```text
-Base URL: http://localhost:8080/v1
+Provider: Local Satchel
+Base URL: http://127.0.0.1:8080/v1
 API Key: local-satchel
-Model: local-satchel
+Model: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
+API mode: chat_completions
 ```
 
-## Hermes integration intent
+The API key is a placeholder for clients that require an auth field. The Local Satchel V1 endpoint binds to `127.0.0.1`, so it is private to the local PC by default.
 
-V1:
+## Show settings without changing Hermes
 
-- Show these values in the Local Satchel UI.
-- Provide exact Hermes setup guidance once the current Hermes provider config format is validated.
-
-V1.1:
-
-- Detect Hermes config location.
-- Back up the config.
-- Add a Local Satchel provider entry.
-- Verify Hermes can call the local endpoint.
-
-## Safety
-
-Local Satchel should never overwrite Hermes config without:
-
-1. showing the user what will change,
-2. creating a backup, and
-3. offering a rollback path.
+```powershell
+satchel connect hermes --show
 ```
+
+Use this for other OpenAI-compatible clients or for manual troubleshooting.
+
+## Hermes config shape
+
+The command creates/updates this provider shape through `hermes config set`:
+
+```yaml
+providers:
+  local-satchel:
+    name: Local Satchel
+    base_url: http://127.0.0.1:8080/v1
+    api_key: local-satchel
+    default_model: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
+    api_mode: chat_completions
+model:
+  provider: local-satchel
+  default: NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
+```
+
+Start a new Hermes session after connecting so Hermes reloads its config.
